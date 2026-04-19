@@ -2,6 +2,7 @@ import os
 import json
 import hashlib
 from datetime import datetime, timedelta
+from flask import Response
 from pymongo import MongoClient
 
 MONGO_URI = os.environ.get("MONGO_URI", "mongodb://localhost:27017")
@@ -24,6 +25,15 @@ def json_response(payload, status=200):
         },
         "body": json.dumps(payload, default=str),
     }
+
+
+def to_flask_response(payload, status=200):
+    response = json_response(payload, status=status)
+    return Response(
+        response=response["body"],
+        status=response["statusCode"],
+        headers=response["headers"],
+    )
 
 
 def parse_json(request):

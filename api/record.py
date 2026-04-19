@@ -1,11 +1,28 @@
-from lib._common import json_response, parse_json, login_collection
+from flask import Flask, request
 from datetime import datetime
 
+from lib._common import parse_json, login_collection, to_flask_response
 
-def handler(request):
+app = Flask(__name__)
+
+
+@app.route("/", methods=["GET", "POST"])
+def record():
     data = parse_json(request)
+    if request.method == "GET":
+        records = []
+        for doc in login_collection.find().sort("timestamp", -1):
+            records.append({
+                "timestamp": doc.get("timestamp"),
+                "email": doc.get("email"),
+                "status": doc.get("status"),
+                "details": doc.get("details", ""),
+                "proxy_enabled": bool(doc.get("proxy_enabled", False)),
+            })
+        return to_flask_response({"success": True, "records": records})
+
     if not data.get("email") or not data.get("status"):
-        return json_response({"success": False, "message": "Email and status required."}, status=400)
+        return to_flask_response({"success": False, "message": "Email and status required."}, status=400)
 
     login_collection.insert_one({
         "timestamp": datetime.utcnow(),
@@ -15,4 +32,4 @@ def handler(request):
         "proxy_enabled": bool(data.get("proxy_enabled", False)),
     })
 
-    return json_response({"success": True})
+    return to_flask_response({"success": True})

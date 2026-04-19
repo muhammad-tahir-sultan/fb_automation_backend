@@ -1,8 +1,11 @@
 import json
+from flask import Flask
+
+app = Flask(__name__)
 
 
-def handler(request):
-    """Root endpoint that displays available API endpoints."""
+@app.route("/", methods=["GET"])
+def index():
     endpoints = {
         "status": "ok",
         "name": "Facebook Login Automation API",
@@ -15,11 +18,11 @@ def handler(request):
             "POST /api/renew": "Renew user subscription",
         }
     }
-    return {
-        "statusCode": 200,
-        "headers": {
+    return (
+        json.dumps(endpoints),
+        200,
+        {
             "Content-Type": "application/json",
-            "Content-Disposition": "inline"
+            "Content-Disposition": "inline",
         },
-        "body": json.dumps(endpoints),
-    }
+    )

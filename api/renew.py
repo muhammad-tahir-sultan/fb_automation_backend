@@ -1,25 +1,30 @@
-from lib._common import json_response, parse_json, users_collection, hash_password, ensure_admin
+from flask import Flask, request
 from datetime import datetime, timedelta
 
+from lib._common import parse_json, users_collection, hash_password, ensure_admin, to_flask_response
 
-def handler(request):
+app = Flask(__name__)
+
+
+@app.route("/", methods=["POST"])
+def renew():
     ensure_admin()
     data = parse_json(request)
     admin_user = None
     if data.get("admin_email") and data.get("admin_password"):
         admin_user = users_collection.find_one({"email": data.get("admin_email")})
     if not admin_user or admin_user.get("role") != "admin" or hash_password(data.get("admin_password", "")) != admin_user.get("password"):
-        return json_response({"success": False, "message": "Admin authentication required."}, status=401)
+        return to_flask_response({"success": False, "message": "Admin authentication required."}, status=401)
 
     email = data.get("email")
     months = int(data.get("months", 1))
 
     if not email:
-        return json_response({"success": False, "message": "Email required."}, status=400)
+        return to_flask_response({"success": False, "message": "Email required."}, status=400)
 
     user = users_collection.find_one({"email": email})
     if not user:
-        return json_response({"success": False, "message": "User not found."}, status=404)
+        return to_flask_response({"success": False, "message": "User not found."}, status=404)
 
     expiry = user.get("subscription_expires")
     if isinstance(expiry, str):
@@ -34,4 +39,4 @@ def handler(request):
     new_expiry = expiry + timedelta(days=30 * months)
     users_collection.update_one({"email": email}, {"$set": {"subscription_expires": new_expiry}})
 
-    return json_response({"success": True, "message": "Subscription renewed.", "subscription_expires": new_expiry})
+    return to_flask_response({"success": True, "message": "Subscription renewed.", "subscription_expires": new_expiry})

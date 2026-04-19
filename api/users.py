@@ -1,10 +1,15 @@
-from lib._common import json_response, parse_json, users_collection, hash_password, ensure_admin
+from flask import Flask, request
 from datetime import datetime, timedelta
 
+from lib._common import parse_json, users_collection, hash_password, ensure_admin, to_flask_response
 
-def handler(request):
+app = Flask(__name__)
+
+
+@app.route("/", methods=["GET", "POST"])
+def users():
     ensure_admin()
-    method = getattr(request, "method", "GET")
+    method = request.method
 
     if method == "GET":
         users = []
@@ -14,16 +19,16 @@ def handler(request):
                 "role": doc.get("role"),
                 "subscription_expires": doc.get("subscription_expires"),
             })
-        return json_response({"success": True, "users": users})
+        return to_flask_response({"success": True, "users": users})
 
     if method == "POST":
         data = parse_json(request)
-        admin = ensure_admin()  # ensure default admin exists
+        ensure_admin()
         admin_user = None
         if data.get("admin_email") and data.get("admin_password"):
             admin_user = users_collection.find_one({"email": data.get("admin_email")})
         if not admin_user or admin_user.get("role") != "admin" or hash_password(data.get("admin_password", "")) != admin_user.get("password"):
-            return json_response({"success": False, "message": "Admin authentication required."}, status=401)
+            return to_flask_response({"success": False, "message": "Admin authentication required."}, status=401)
 
         email = data.get("email")
         password = data.get("password")
@@ -31,10 +36,10 @@ def handler(request):
         months = int(data.get("months", 1))
 
         if not email or not password:
-            return json_response({"success": False, "message": "Email and password required."}, status=400)
+            return to_flask_response({"success": False, "message": "Email and password required."}, status=400)
 
         if users_collection.find_one({"email": email}):
-            return json_response({"success": False, "message": "User already exists."}, status=409)
+            return to_flask_response({"success": False, "message": "User already exists."}, status=409)
 
         expires = datetime.utcnow() + timedelta(days=30 * months)
         users_collection.insert_one({
@@ -45,6 +50,6 @@ def handler(request):
             "created_at": datetime.utcnow(),
         })
 
-        return json_response({"success": True, "message": "User created.", "subscription_expires": expires}, status=201)
+        return to_flask_response({"success": True, "message": "User created.", "subscription_expires": expires}, status=201)
 
-    return json_response({"success": False, "message": "Method not allowed."}, status=405)
+    return to_flask_response({"success": False, "message": "Method not allowed."}, status=405)
