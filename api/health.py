@@ -1,4 +1,4 @@
-from ._common import json_response, client
+from lib._common import json_response, client
 
 
 def handler(request):

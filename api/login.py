@@ -1,4 +1,4 @@
-from ._common import json_response, parse_json, users_collection, hash_password, is_subscription_active, ensure_admin
+from lib._common import json_response, parse_json, users_collection, hash_password, is_subscription_active, ensure_admin
 
 
 def handler(request):

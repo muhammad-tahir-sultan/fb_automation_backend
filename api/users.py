@@ -1,4 +1,4 @@
-from ._common import json_response, parse_json, users_collection, hash_password, ensure_admin
+from lib._common import json_response, parse_json, users_collection, hash_password, ensure_admin
 from datetime import datetime, timedelta
 
 
