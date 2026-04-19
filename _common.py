@@ -18,7 +18,10 @@ login_collection = db["login_records"]
 def json_response(payload, status=200):
     return {
         "statusCode": status,
-        "headers": {"content-type": "application/json"},
+        "headers": {
+            "content-type": "application/json",
+            "content-disposition": "inline"
+        },
         "body": json.dumps(payload, default=str),
     }
 
