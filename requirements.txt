@@ -1,0 +1,5 @@
+flask
+pymongo
+selenium
+requests
+python-dotenv
