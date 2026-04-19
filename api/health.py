@@ -1,3 +1,4 @@
+import lib.session
 from flask import Flask
 
 from lib._common import client, to_flask_response
