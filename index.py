@@ -1,4 +1,4 @@
-from ._common import json_response
+import json
 
 
 def handler(request):
@@ -15,4 +15,11 @@ def handler(request):
             "POST /api/renew": "Renew user subscription",
         }
     }
-    return json_response(endpoints)
+    return {
+        "statusCode": 200,
+        "headers": {
+            "Content-Type": "application/json",
+            "Content-Disposition": "inline"
+        },
+        "body": json.dumps(endpoints),
+    }
